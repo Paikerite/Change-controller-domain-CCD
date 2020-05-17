@@ -5,7 +5,7 @@ import subprocess
 # import wexpect
 # from pexpect import popen_spawn, TIMEOUT
 from pythonping import ping
-from PyQt5 import QtWidgets
+from PySide2 import QtWidgets
 import ui
 
 auto_domain = gethostbyname(gethostname())
@@ -30,6 +30,10 @@ print(auto_domain)
 
 def transferFSMO(self):
     print(f'''[LOG] execute command - ntdsutil roles connections "connect to server {self.to_domain}" quit {''.join(self.need_send_transfer_FSMO)}''')
+
+    self.turnoffgui()
+    self.progressBar_waiting.setMaximum(0)
+
     try:
         process = subprocess.run(f'''ntdsutil roles connections "connect to server {self.to_domain}" quit {''.join(self.need_send_transfer_FSMO)}''',
                                      stdout=subprocess.PIPE,
@@ -49,89 +53,12 @@ def transferFSMO(self):
     except subprocess.TimeoutExpired as TE:
         self.textBrowser_log_fromPS.append()
         self.textBrowser_log_fromPS.append(f"Ошибка! Подробности указаны здесь:\n{TE}")
+    
+    finally:
+        self.turnongui()
+        self.progressBar_waiting.setMaximum(1)
 
 # Использывать QProcces
-
-    # procces.logfile_read = sys.stdout
-                
-    # self.textBrowser_log_fromPS.append(str(procces.before))
-    # procces.expect('>')
-    # self.textBrowser_log_fromPS.append(str(procces.after))
-    # procces.expect(['ntdsutil: ', r'C:\Windows\System32\ntdsutil.exe: '])
-
-    # print(procces.before)
-    # print(procces.after)
-            
-    # procces.sendline('ntdsutil')
-    # self.textBrowser_log_fromPS.append(str(procces.after))
-    # procces.expect(':') # ntdsutil
-    # self.textBrowser_log_fromPS.append(str(procces.after))
-
-    # print(procces.before)
-    # print(procces.after)
-            
-    # procces.sendline('connections')
-    # procces.sendline('roles')
-    # self.textBrowser_log_fromPS.append(str("ntdsutil: roles"))
-    # procces.expect(':') # fsmo maintenace
-
-    # print(procces.before)
-    # print(procces.after)
-            
-    # procces.sendline("connections")
-    # self.textBrowser_log_fromPS.append(str("fsmo maintenace: connections"))
-    # procces.expect(':') # server connections
-
-    # print(procces.before)
-    # print(procces.after)
-
-    #procces.sendline('quit')
-    # procces.sendline(f'connect to server {self.to_domain}')
-    # self.textBrowser_log_fromPS.append(str(f"server connections: connect to server {self.to_domain}"))
-    # self.textBrowser_log_fromPS.append(str(procces.readline()))
-    # index = procces.expect([':', wexpect.EOF, wexpect.TIMEOUT]) # server connections
-    
-    # if index == 0:
-    #    procces.sendline('quit')
-    #    self.textBrowser_log_fromPS.append(str('server connections: quit'))
-    #    procces.expect(':') # fsmo connections
-    #    self.textBrowser_log_fromPS.append(str(procces.after))
-
-    #    if self.transfer_pdc:
-    #        self.textBrowser_log_fromPS.append(str('fsmo connections: transfer pdc'))
-    #        procces.sendline('transfer pdc')
-
-    #    if self.transfer_rid_master:
-    #        self.textBrowser_log_fromPS.append(str('fsmo connections: transfer rid master'))
-    #        procces.sendline('transfer rid master')
-
-    #    if self.transfer_infrastructure_master:
-    #        self.textBrowser_log_fromPS.append(str('fsmo connections: transfer infrastructure master'))
-    #        procces.sendline('transfer infrastructure master')
-
-    #    if self.transfer_schema_master:
-    #        self.textBrowser_log_fromPS.append(str('fsmo connections: transfer schema master'))
-    #        procces.sendline('transfer schema master')
-
-    #    if self.transfer_naming_master:
-    #        self.textBrowser_log_fromPS.append(str('fsmo connections: transfer naming master'))
-    #        procces.sendline('transfer naming master')
-        # self.textBrowser_log_fromPS.append(str(procces.after))
-        
-    #if index == 1:
-    #    print('[LOG] ##### EOF #####')
-    #    self.textBrowser_log_fromPS.append(str(f"EOF: \n {procces.before}"))
-    #if index == 2:
-    #    print('[LOG] ##### TIMEOUT #####')
-    #    self.textBrowser_log_fromPS.append(str(f"ERROR TIMEOUT: \n {procces.before}"))
-        
-
-    #print(procces.before)
-    #print(procces.after)
-    # print(procces.read())
-    
-    #self.textBrowser_log_fromPS.append(str(procces.after))
-    # self.textBrowser_log_fromPS.append(str(procces.read()))
 
 class MainApp(QtWidgets.QMainWindow, ui.Ui_MainWindow):
     def __init__(self):
@@ -158,7 +85,18 @@ class MainApp(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             self.pushButton_changedomain.setEnabled(True)
         else:
             self.pushButton_changedomain.setEnabled(False)
-        
+
+
+    def turnongui(self):
+        self.label_info_aboutanotherdomain.setEnabled(True)
+        self.pushButton_ownersOfDomain.setEnabled(True)
+        self.lineEdit.setEnabled(True)
+        self.pushButton_changedomain.setEnabled(True)
+        self.checkBox_DomainNamingMaster.setEnabled(True)
+        self.checkBox_InfrastructureMaster.setEnabled(True)
+        self.checkBox_PDCEmulator.setEnabled(True)
+        self.checkBox_SchemaMaster.setEnabled(True)
+        self.checkBox_RIDMaster.setEnabled(True)
 
     def turnoffgui(self):
         self.label_info_aboutanotherdomain.setEnabled(False)
