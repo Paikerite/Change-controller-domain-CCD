@@ -9,7 +9,12 @@ from PyQt5 import QtWidgets
 import ui
 
 auto_domain = gethostbyname(gethostname())
-auto_domain = gethostbyaddr(auto_domain)[0].split('.', 1)[1]
+try:
+    auto_domain = gethostbyaddr(auto_domain)[0].split('.', 1)[1]
+except IndexError as IE:
+    print(f"[WARNING] {IE}")
+    auto_domain = gethostbyaddr(auto_domain)[0]
+
 print(auto_domain)
 
 
@@ -26,7 +31,7 @@ print(auto_domain)
 def transferFSMO(self):
     print(f'''[LOG] execute command - ntdsutil roles connections "connect to server {self.to_domain}" quit {''.join(self.need_send_transfer_FSMO)}''')
     try:
-        procces = subprocess.run(f'''ntdsutil roles connections "connect to server {self.to_domain}" quit {''.join(self.need_send_transfer_FSMO)}''',
+        process = subprocess.run(f'''ntdsutil roles connections "connect to server {self.to_domain}" quit {''.join(self.need_send_transfer_FSMO)}''',
                                      stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE,
                                     timeout=15,
@@ -36,9 +41,14 @@ def transferFSMO(self):
             self.textBrowser_log_fromPS.append(str(process.stdout))
         else:
             self.textBrowser_log_fromPS.append(str(process.stderr))
+
+    except FileNotFoundError as FE:
+        self.textBrowser_log_fromPS.append("Ошибка! Исполнитель ntdsutil не обнаружен.")
+        print(f"[ERROR] {FE}")
+
     except subprocess.TimeoutExpired as TE:
         self.textBrowser_log_fromPS.append()
-        self.textBrowser_log_fromPS.append(f"Ошибка, подробности указаны здесь:\n{TE}")
+        self.textBrowser_log_fromPS.append(f"Ошибка! Подробности указаны здесь:\n{TE}")
 
 # Использывать QProcces
 
@@ -187,16 +197,21 @@ class MainApp(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         print(self.domain)
 
     def ownersOfDomain(self):
-        process = subprocess.run("netdom query fsmo", stdout=subprocess.PIPE,
-                                                            stderr=subprocess.PIPE,
-                                                            encoding='CP866')
-        #process = process.communicate()
-        #self.textBrowser_log_fromPS.append(str(process.stdout))
-        
-        if process.stdout:
-            self.textBrowser_log_fromPS.append(str(process.stdout))
-        else:
-            self.textBrowser_log_fromPS.append(str(process.stderr))
+        try:
+            process = subprocess.run("netdom query fsmo", stdout=subprocess.PIPE,
+                                                                stderr=subprocess.PIPE,
+                                                                encoding='CP866')
+            #process = process.communicate()
+            #self.textBrowser_log_fromPS.append(str(process.stdout))
+            
+            if process.stdout:
+                self.textBrowser_log_fromPS.append(str(process.stdout))
+            else:
+                self.textBrowser_log_fromPS.append(str(process.stderr))
+                
+        except FileNotFoundError as FE:
+            print(f"[ERROR] {FE}")
+            self.textBrowser_log_fromPS.append("Ошибка! Исполнитель netdom не обнаружен.")
 
 
     def changedomain(self):
@@ -213,7 +228,7 @@ class MainApp(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             self.transfer_pdc = False
             try:
                 need_send.pop(need_send.index("\ntransfer pdc"))
-                self.need_send_transfer_FSMO.pop(need_send_transfer_FSMO.index('''"transfer pdc"'''))
+                self.need_send_transfer_FSMO.pop(self.need_send_transfer_FSMO.index('''"transfer pdc"'''))
             except ValueError as ve:
                 print(ve)
 
@@ -226,7 +241,7 @@ class MainApp(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             self.transfer_rid_master = False
             try:
                 need_send.pop(need_send.index("\ntransfer rid master"))
-                self.need_send_transfer_FSMO.pop(need_send_transfer_FSMO.index('''"transfer rid master"'''))
+                self.need_send_transfer_FSMO.pop(self.need_send_transfer_FSMO.index('''"transfer rid master"'''))
             except ValueError as ve:
                 print(ve)
 
@@ -239,7 +254,7 @@ class MainApp(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             self.transfer_infrastructure_master = False
             try:
                 need_send.pop(need_send.index("\ntransfer infrastructure master"))
-                self.need_send_transfer_FSMO.pop(need_send_transfer_FSMO.index('''"transfer infrastructure master"'''))
+                self.need_send_transfer_FSMO.pop(self.need_send_transfer_FSMO.index('''"transfer infrastructure master"'''))
             except ValueError as ve:
                 print(ve)
 
@@ -252,7 +267,7 @@ class MainApp(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             self.transfer_schema_master = False
             try:
                 need_send.pop(need_send.index("\ntransfer schema master"))
-                self.need_send_transfer_FSMO.pop(need_send_transfer_FSMO.index('''"transfer schema master"'''))
+                self.need_send_transfer_FSMO.pop(self.need_send_transfer_FSMO.index('''"transfer schema master"'''))
             except ValueError as ve:
                 print(ve)
 
@@ -265,7 +280,7 @@ class MainApp(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             self.transfer_naming_master = False
             try:
                 need_send.pop(need_send.index("\ntransfer naming master"))
-                self.need_send_transfer_FSMO.pop(need_send_transfer_FSMO.index('''"transfer naming master"'''))
+                self.need_send_transfer_FSMO.pop(self.need_send_transfer_FSMO.index('''"transfer naming master"'''))
             except ValueError as ve:
                 print(ve)
 
