@@ -6,6 +6,7 @@ import subprocess
 # from pexpect import popen_spawn, TIMEOUT
 from pythonping import ping
 from PySide2 import QtWidgets
+from PySide2 import QtCore
 import ui
 
 auto_domain = gethostbyname(gethostname())
@@ -32,31 +33,52 @@ def transferFSMO(self):
     print(f'''[LOG] execute command - ntdsutil roles connections "connect to server {self.to_domain}" quit {''.join(self.need_send_transfer_FSMO)}''')
 
     self.turnoffgui()
+    self.pushButton_connect.setEnabled(False)
+    self.lineEdit_domain.setEnabled(False)
     self.progressBar_waiting.setMaximum(0)
 
+    ntdsutil_procces = QtCore.QProcess()
+    # ntdsutil_procces.start(f'''ntdsutil roles connections "connect to server {self.to_domain}" quit {''.join(self.need_send_transfer_FSMO)}''')
+    ntdsutil_procces.start("ping google.com -t")
+
+    ntdsutil_procces.waitForFinished(10000)
     try:
-        process = subprocess.run(f'''ntdsutil roles connections "connect to server {self.to_domain}" quit {''.join(self.need_send_transfer_FSMO)}''',
-                                     stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE,
-                                    timeout=15,
-                                    encoding='CP866')
-      
-        if process.stdout:
-            self.textBrowser_log_fromPS.append(str(process.stdout))
-        else:
-            self.textBrowser_log_fromPS.append(str(process.stderr))
-
-    except FileNotFoundError as FE:
-        self.textBrowser_log_fromPS.append("Ошибка! Исполнитель ntdsutil не обнаружен.")
-        print(f"[ERROR] {FE}")
-
-    except subprocess.TimeoutExpired as TE:
-        self.textBrowser_log_fromPS.append()
-        self.textBrowser_log_fromPS.append(f"Ошибка! Подробности указаны здесь:\n{TE}")
-    
+        res = bytearray(ntdsutil_procces.readAllStandardOutput()).decode("CP866")
+        self.textBrowser_log_fromPS.append(str(res))
+    except Exception as ex:
+        print(ex)
     finally:
-        self.turnongui()
-        self.progressBar_waiting.setMaximum(1)
+        ntdsutil_procces.terminate()
+        if ntdsutil_procces.Running:
+            print(f"[WARNING] Каким-то хуем процесс еще работат, id - {ntdsutil_procces.processId()}")
+
+    self.turnongui()
+    self.pushButton_connect.setEnabled(True)
+    self.lineEdit_domain.setEnabled(True)
+    self.progressBar_waiting.setMaximum(1)
+    # try:
+    #     process = subprocess.run(f'''ntdsutil roles connections "connect to server {self.to_domain}" quit {''.join(self.need_send_transfer_FSMO)}''',
+    #                                  stdout=subprocess.PIPE,
+    #                                 stderr=subprocess.PIPE,
+    #                                 timeout=15,
+    #                                 encoding='CP866')
+      
+    #     if process.stdout:
+    #         self.textBrowser_log_fromPS.append(str(process.stdout))
+    #     else:
+    #         self.textBrowser_log_fromPS.append(str(process.stderr))
+
+    # except FileNotFoundError as FE:
+    #     self.textBrowser_log_fromPS.append("Ошибка! Исполнитель ntdsutil не обнаружен.")
+    #     print(f"[ERROR] {FE}")
+
+    # except subprocess.TimeoutExpired as TE:
+    #     self.textBrowser_log_fromPS.append()
+    #     self.textBrowser_log_fromPS.append(f"Ошибка! Подробности указаны здесь:\n{TE}")
+    
+    # finally:
+    #     self.turnongui()
+    #     self.progressBar_waiting.setMaximum(1)
 
 # Использывать QProcces
 
