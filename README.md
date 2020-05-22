@@ -8,3 +8,12 @@ This application transfer roles, such as:
 * DomainNamingMaster.
 
 Based on ntdsutil.
+
+## The module i used ##
+1. PySide2
+2. Subprocces
+3. Threading
+4. socket
+5. pythonping
+
+### Perfectly work on Windows Server 2012B2, maybe another. ###
