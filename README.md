@@ -17,3 +17,7 @@ Based on ntdsutil.
 5. pythonping
 
 ### Perfectly work on Windows Server 2012B2, maybe another. ###
+
+## The gui of app ##
+![gui](https://i.ibb.co/ZMtQCXF/CCD.png)
+>it can be translated.
